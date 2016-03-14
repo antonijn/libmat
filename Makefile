@@ -5,7 +5,7 @@ TARGET = libmat.a
 
 OBJECTS = src/mat.o src/vec.o src/misc.o
 
-release: CFLAGS += -DNDEBUG -O2
+release: CFLAGS += -DNDEBUG -Ofast
 debug: CFLAGS += -g
 
 release debug: $(TARGET)
