@@ -15,6 +15,7 @@
  */
 
 #include <math.h>
+#include <stdarg.h>
 
 #include <mat/vec.h>
 #include <mat/mat.h>
@@ -74,6 +75,40 @@ mat4 mat4_rot_z(float theta)
 	res.frows[1][0] = -s;
 	return res;
 }
+mat4 mat4_scale(vec3 scale)
+{
+	mat4 res = mat4_id();
+	res.rows[0].x = scale.x;
+	res.rows[1].y = scale.y;
+	res.rows[2].z = scale.z;
+	return res;
+}
+mat4 mat4_ortho(float l, float r, float top, float bottom)
+{
+	vec3 orig1, orig2, scalev;
+	mat4 trans1, scale, trans2, res;
+	float w, h;
+
+	w = r - l;
+	h = top - bottom;
+
+	orig1.x = l;
+	orig1.y = bottom;
+	orig1.z = 0.0f;
+	trans1 = mat4_translation(orig1);
+
+	scalev.x = 2.0f / w;
+	scalev.y = 2.0f / h;
+	scalev.z = 1.0f;
+	scale = mat4_scale(scalev);
+
+	orig2.x = 1.0f;
+	orig2.y = 1.0f;
+	orig2.z = 0.0f;
+	trans2 = mat4_translation(orig2);
+
+	return mat4_compose(&trans2, &scale, &trans1, NULL);
+}
 
 vec4 mat4_col(const mat4 *m, int c)
 {
@@ -102,6 +137,18 @@ mat4 mat4_mul(const mat4 *l, const mat4 *r)
 	for (i = 0; i < 4; ++i)
 		res.rows[i] = mat4_vecmul(l, mat4_col(r, i));
 	return mat4_transpose(&res);
+}
+mat4 mat4_compose(const mat4 *last, ...)
+{
+	va_list ap;
+	mat4 res = *last;
+	va_start(ap, last);
+
+	while (last = va_arg(ap, const mat4 *))
+		res = mat4_mul(&res, last);
+
+	va_end(ap);
+	return res;
 }
 vec4 mat4_vecmul(const mat4 *l, vec4 r)
 {
